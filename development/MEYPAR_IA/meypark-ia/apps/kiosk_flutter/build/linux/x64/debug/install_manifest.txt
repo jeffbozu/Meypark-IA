@@ -8,6 +8,7 @@
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/debug/bundle/lib/libwindow_manager_plugin.so
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/debug/bundle/data/flutter_assets/FontManifest.json
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/debug/bundle/data/flutter_assets/version.json
+/home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/debug/bundle/data/flutter_assets/NOTICES
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/debug/bundle/data/flutter_assets/fonts/MaterialIcons-Regular.otf
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/debug/bundle/data/flutter_assets/kernel_blob.bin
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/debug/bundle/data/flutter_assets/AssetManifest.bin
@@ -18,4 +19,5 @@
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/debug/bundle/data/flutter_assets/packages/window_manager/images/ic_chrome_unmaximize.png
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/debug/bundle/data/flutter_assets/packages/window_manager/images/ic_chrome_minimize.png
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/debug/bundle/data/flutter_assets/packages/window_manager/images/ic_chrome_maximize.png
+/home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/debug/bundle/data/flutter_assets/AssetManifest.bin.json
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/debug/bundle/data/flutter_assets/AssetManifest.json

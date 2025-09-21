@@ -11,6 +11,7 @@
         "equatable",
         "file_selector",
         "flutter",
+        "flutter_localizations",
         "flutter_riverpod",
         "flutter_tts",
         "freezed_annotation",
@@ -285,8 +286,17 @@
       ]
     },
     {
+      "name": "flutter_localizations",
+      "version": "0.0.0",
+      "dependencies": [
+        "flutter",
+        "intl",
+        "path"
+      ]
+    },
+    {
       "name": "intl",
-      "version": "0.19.0",
+      "version": "0.20.2",
       "dependencies": [
         "clock",
         "meta",

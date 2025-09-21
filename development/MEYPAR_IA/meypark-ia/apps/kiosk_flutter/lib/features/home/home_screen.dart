@@ -14,26 +14,39 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: const DynamicAppBar(),
-      body: Column(
-        children: [
-          // Mensaje de bienvenida dinámico
-          if (_shouldShowWelcomeMessage(uiOverrides))
-            _buildWelcomeMessage(uiOverrides),
+      body: uiOverrides.when(
+        data: (uiOverridesData) {
+          return aiSettings.when(
+            data: (aiSettingsData) {
+              return Column(
+                children: [
+                  // Mensaje de bienvenida dinámico
+                  if (_shouldShowWelcomeMessage(uiOverridesData))
+                    _buildWelcomeMessage(uiOverridesData),
 
-          // Contenido principal
-          Expanded(
-            child: _buildMainContent(context, ref, uiOverrides, aiSettings),
-          ),
-        ],
+                  // Contenido principal
+                  Expanded(
+                    child: _buildMainContent(
+                        context, ref, uiOverridesData, aiSettingsData),
+                  ),
+                ],
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(child: Text('Error: $err')),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
       ),
     );
   }
 
-  Widget _buildWelcomeMessage(AsyncValue<Map<String, dynamic>?> uiOverrides) {
-    if (uiOverrides.value == null) return const SizedBox.shrink();
+  Widget _buildWelcomeMessage(Map<String, dynamic>? uiOverrides) {
+    if (uiOverrides == null) return const SizedBox.shrink();
 
     final textOverrides =
-        uiOverrides.value!['text_overrides_json'] as Map<String, dynamic>?;
+        uiOverrides['text_overrides_json'] as Map<String, dynamic>?;
     final welcomeMessage = textOverrides?['welcome_message'] as String?;
 
     if (welcomeMessage == null || welcomeMessage.isEmpty) {
@@ -42,11 +55,30 @@ class HomeScreen extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      color: Colors.blue.shade50,
+      margin: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade50, Colors.blue.shade100],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.2),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
       child: Text(
         welcomeMessage,
-        style: const TextStyle(fontSize: 16),
+        style: const TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: Colors.blue,
+        ),
         textAlign: TextAlign.center,
       ),
     );
@@ -55,8 +87,8 @@ class HomeScreen extends ConsumerWidget {
   Widget _buildMainContent(
     BuildContext context,
     WidgetRef ref,
-    AsyncValue<Map<String, dynamic>?> uiOverrides,
-    AsyncValue<Map<String, dynamic>?> aiSettings,
+    Map<String, dynamic>? uiOverrides,
+    Map<String, dynamic>? aiSettings,
   ) {
     return Center(
       child: Column(
@@ -82,39 +114,127 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  bool _shouldShowWelcomeMessage(Map<String, dynamic>? uiOverrides) {
+    if (uiOverrides == null) return false;
+
+    final visibilityJson =
+        uiOverrides['visibility_json'] as Map<String, dynamic>?;
+    return visibilityJson?['show_welcome_message'] as bool? ?? true;
+  }
+
+  bool _shouldShowMostUsedZone(Map<String, dynamic>? aiSettings) {
+    if (aiSettings == null) return false;
+
+    final adaptiveEnabled = aiSettings['ia_adaptive_enabled'] as bool? ?? false;
+    final payRecoLast5 = aiSettings['ia_pay_reco_last5'] as bool? ?? false;
+
+    return adaptiveEnabled && payRecoLast5;
+  }
+
   Widget _buildMostUsedZoneCard(
     BuildContext context,
     WidgetRef ref,
-    AsyncValue<Map<String, dynamic>?> aiSettings,
+    Map<String, dynamic>? aiSettings,
   ) {
+    final aiRecommendations = ref.watch(aiRecommendationsProvider);
+
+    return aiRecommendations.when(
+      data: (recommendations) {
+        final mostUsedZoneId = recommendations?['most_used_zone_id'] as String?;
+        if (mostUsedZoneId == null) return const SizedBox.shrink();
+
+        final zones = ref.watch(zonesProvider);
+        return zones.when(
+          data: (zonesList) {
+            final mostUsedZone = zonesList.firstWhere(
+              (zone) => zone['id'] == mostUsedZoneId,
+              orElse: () => <String, dynamic>{},
+            );
+
+            if (mostUsedZone.isEmpty) return const SizedBox.shrink();
+
+            return _buildZoneCard(context, mostUsedZone, isRecommended: true);
+          },
+          loading: () => const CircularProgressIndicator(),
+          error: (err, stack) => Text('Error: $err'),
+        );
+      },
+      loading: () => const CircularProgressIndicator(),
+      error: (err, stack) => Text('Error: $err'),
+    );
+  }
+
+  Widget _buildZoneCard(
+    BuildContext context,
+    Map<String, dynamic> zone, {
+    bool isRecommended = false,
+  }) {
+    final zoneName = zone['name'] as String? ?? 'Zona Desconocida';
+    final zoneColorHex = zone['color'] as String? ?? '#000000';
+    final zoneColor = Color(int.parse(zoneColorHex.replaceAll('#', '0xFF')));
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 32),
+      margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
       child: Card(
-        color: Colors.amber.shade50,
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: isRecommended
+              ? BorderSide(color: Colors.green.shade700, width: 3)
+              : BorderSide.none,
+        ),
         child: InkWell(
-          onTap: () => _navigateToPayment(context),
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+          onTap: () {
+            context.goNamed('pay-plate', extra: {'zone': zone});
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                colors: [zoneColor, zoneColor.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
               children: [
-                Icon(Icons.star, color: Colors.amber.shade700),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Zona más usada',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                if (isRecommended)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade700,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'RECOMENDADO',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
+                const SizedBox(height: 12),
+                Text(
+                  zoneName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 8),
                 const Text(
-                  'Zona Azul Centro',
-                  style: TextStyle(fontSize: 14),
+                  'Toca para pagar',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                  ),
                 ),
-                const SizedBox(width: 8),
-                Icon(Icons.arrow_forward_ios, size: 16),
               ],
             ),
           ),
@@ -123,137 +243,138 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  bool _shouldShowPayButton(Map<String, dynamic>? uiOverrides) {
+    if (uiOverrides == null) return true;
+
+    final visibilityJson =
+        uiOverrides['visibility_json'] as Map<String, dynamic>?;
+    return visibilityJson?['show_pay_button'] as bool? ?? true;
+  }
+
   Widget _buildPayButton(
-    BuildContext context,
-    AsyncValue<Map<String, dynamic>?> uiOverrides,
-  ) {
+      BuildContext context, Map<String, dynamic>? uiOverrides) {
     final buttonColor = _getPayButtonColor(uiOverrides);
     final buttonText = _getPayButtonText(uiOverrides);
 
-    return SizedBox(
-      width: 280,
-      height: 80,
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: ElevatedButton(
-        onPressed: () => _navigateToPayment(context),
+        onPressed: () {
+          context.goNamed('pay-zone');
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: buttonColor,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 32),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(20),
           ),
-          elevation: 4,
+          elevation: 12,
+          shadowColor: buttonColor.withOpacity(0.4),
         ),
-        child: Text(
-          buttonText,
-          style: const TextStyle(
-            fontSize: 24,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.payment, size: 40),
+            const SizedBox(width: 16),
+            Text(
+              buttonText,
+              style: const TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Color _getPayButtonColor(Map<String, dynamic>? uiOverrides) {
+    if (uiOverrides == null) return Colors.green;
+
+    final colorsJson = uiOverrides['colors_json'] as Map<String, dynamic>?;
+    final colorHex = colorsJson?['button_pay_bg'] as String?;
+    if (colorHex != null) {
+      return Color(int.parse(colorHex.replaceAll('#', '0xFF')));
+    }
+    return Colors.green;
+  }
+
+  String _getPayButtonText(Map<String, dynamic>? uiOverrides) {
+    if (uiOverrides == null) return 'PAGAR ESTACIONAMIENTO';
+
+    final textOverrides =
+        uiOverrides['text_overrides_json'] as Map<String, dynamic>?;
+    return textOverrides?['pay_button_text'] as String? ??
+        'PAGAR ESTACIONAMIENTO';
+  }
+
+  bool _shouldShowCancelButton(Map<String, dynamic>? uiOverrides) {
+    if (uiOverrides == null) return true;
+
+    final visibilityJson =
+        uiOverrides['visibility_json'] as Map<String, dynamic>?;
+    return visibilityJson?['show_cancel_button'] as bool? ?? true;
   }
 
   Widget _buildCancelButton(
-    BuildContext context,
-    AsyncValue<Map<String, dynamic>?> uiOverrides,
-  ) {
+      BuildContext context, Map<String, dynamic>? uiOverrides) {
     final buttonColor = _getCancelButtonColor(uiOverrides);
     final buttonText = _getCancelButtonText(uiOverrides);
 
-    return SizedBox(
-      width: 280,
-      height: 60,
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: ElevatedButton(
-        onPressed: () => _navigateToCancelFine(context),
+        onPressed: () {
+          context.goNamed('cancel-fine');
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: buttonColor,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 32),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(20),
           ),
-          elevation: 4,
+          elevation: 12,
+          shadowColor: buttonColor.withOpacity(0.4),
         ),
-        child: Text(
-          buttonText,
-          style: const TextStyle(
-            fontSize: 18,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.cancel_outlined, size: 40),
+            const SizedBox(width: 16),
+            Text(
+              buttonText,
+              style: const TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  bool _shouldShowWelcomeMessage(
-      AsyncValue<Map<String, dynamic>?> uiOverrides) {
-    if (uiOverrides.value == null) return false;
+  Color _getCancelButtonColor(Map<String, dynamic>? uiOverrides) {
+    if (uiOverrides == null) return Colors.red;
+
+    final colorsJson = uiOverrides['colors_json'] as Map<String, dynamic>?;
+    final colorHex = colorsJson?['button_cancel_bg'] as String?;
+    if (colorHex != null) {
+      return Color(int.parse(colorHex.replaceAll('#', '0xFF')));
+    }
+    return Colors.red;
+  }
+
+  String _getCancelButtonText(Map<String, dynamic>? uiOverrides) {
+    if (uiOverrides == null) return 'ANULAR DENUNCIA';
 
     final textOverrides =
-        uiOverrides.value!['text_overrides_json'] as Map<String, dynamic>?;
-    final welcomeMessage = textOverrides?['welcome_message'] as String?;
-    return welcomeMessage != null && welcomeMessage.isNotEmpty;
-  }
-
-  bool _shouldShowMostUsedZone(AsyncValue<Map<String, dynamic>?> aiSettings) {
-    if (aiSettings.value == null) return false;
-
-    return aiSettings.value!['presets_smart'] == true;
-  }
-
-  bool _shouldShowPayButton(AsyncValue<Map<String, dynamic>?> uiOverrides) {
-    if (uiOverrides.value == null) return true;
-
-    final visibility =
-        uiOverrides.value!['visibility_json'] as Map<String, dynamic>?;
-    return visibility?['show_pay'] ?? true;
-  }
-
-  bool _shouldShowCancelButton(AsyncValue<Map<String, dynamic>?> uiOverrides) {
-    if (uiOverrides.value == null) return true;
-
-    final visibility =
-        uiOverrides.value!['visibility_json'] as Map<String, dynamic>?;
-    return visibility?['show_cancel'] ?? true;
-  }
-
-  Color _getPayButtonColor(AsyncValue<Map<String, dynamic>?> uiOverrides) {
-    if (uiOverrides.value == null) return const Color(0xFF4CAF50);
-
-    final colors = uiOverrides.value!['colors_json'] as Map<String, dynamic>?;
-    final colorHex = colors?['button_pay_bg'] ?? '#4CAF50';
-    return Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
-  }
-
-  Color _getCancelButtonColor(AsyncValue<Map<String, dynamic>?> uiOverrides) {
-    if (uiOverrides.value == null) return const Color(0xFFF44336);
-
-    final colors = uiOverrides.value!['colors_json'] as Map<String, dynamic>?;
-    final colorHex = colors?['button_cancel_bg'] ?? '#F44336';
-    return Color(int.parse(colorHex.replaceFirst('#', '0xFF')));
-  }
-
-  String _getPayButtonText(AsyncValue<Map<String, dynamic>?> uiOverrides) {
-    if (uiOverrides.value == null) return 'PAGAR ESTACIONAMIENTO';
-
-    final textOverrides =
-        uiOverrides.value!['text_overrides_json'] as Map<String, dynamic>?;
-    return textOverrides?['button_pay_text'] ?? 'PAGAR ESTACIONAMIENTO';
-  }
-
-  String _getCancelButtonText(AsyncValue<Map<String, dynamic>?> uiOverrides) {
-    if (uiOverrides.value == null) return 'ANULAR DENUNCIA';
-
-    final textOverrides =
-        uiOverrides.value!['text_overrides_json'] as Map<String, dynamic>?;
-    return textOverrides?['button_cancel_text'] ?? 'ANULAR DENUNCIA';
-  }
-
-  void _navigateToPayment(BuildContext context) {
-    context.go('/pay');
-  }
-
-  void _navigateToCancelFine(BuildContext context) {
-    context.go('/cancel-fine');
+        uiOverrides['text_overrides_json'] as Map<String, dynamic>?;
+    return textOverrides?['cancel_button_text'] as String? ?? 'ANULAR DENUNCIA';
   }
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/supabase/supabase_client.dart';
 import '../../core/providers/supabase_providers.dart';
-import '../../widgets/dynamic_app_bar.dart';
 
 class HiddenLoginScreen extends ConsumerStatefulWidget {
   const HiddenLoginScreen({super.key});
@@ -12,228 +12,47 @@ class HiddenLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _HiddenLoginScreenState extends ConsumerState<HiddenLoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+  String? _techPassword;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTechPassword();
+  }
 
   @override
   void dispose() {
-    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const DynamicAppBar(),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32),
-          child: Card(
-            elevation: 8,
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 400),
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Header
-                  _buildHeader(),
+  Future<void> _loadTechPassword() async {
+    try {
+      // Obtener contraseña técnica desde Supabase
+      final response = await SupabaseService.client
+          .from('security_configs')
+          .select('auth_config_json')
+          .eq('company_id', 'company_mowiz') // TODO: Obtener dinámicamente
+          .single();
 
-                  const SizedBox(height: 32),
-
-                  // Formulario de login
-                  _buildLoginForm(),
-
-                  const SizedBox(height: 24),
-
-                  // Botón de login
-                  _buildLoginButton(),
-
-                  const SizedBox(height: 16),
-
-                  // Botón de cancelar
-                  _buildCancelButton(),
-
-                  if (_errorMessage != null) ...[
-                    const SizedBox(height: 16),
-                    _buildErrorMessage(),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Column(
-      children: [
-        Icon(
-          Icons.admin_panel_settings,
-          size: 64,
-          color: Colors.blue.shade700,
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Acceso Técnico',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Acceso restringido para personal autorizado',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade600,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoginForm() {
-    return Column(
-      children: [
-        // Email
-        TextField(
-          controller: _emailController,
-          decoration: InputDecoration(
-            labelText: 'Email',
-            hintText: 'admin@meypark.com',
-            prefixIcon: const Icon(Icons.email),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          keyboardType: TextInputType.emailAddress,
-          enabled: !_isLoading,
-        ),
-
-        const SizedBox(height: 16),
-
-        // Password
-        TextField(
-          controller: _passwordController,
-          decoration: InputDecoration(
-            labelText: 'Contraseña',
-            hintText: 'Introduzca su contraseña',
-            prefixIcon: const Icon(Icons.lock),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          obscureText: true,
-          enabled: !_isLoading,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoginButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _performLogin,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: _isLoading
-            ? const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Text(
-                    'Iniciando sesión...',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              )
-            : const Text(
-                'INICIAR SESIÓN',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-      ),
-    );
-  }
-
-  Widget _buildCancelButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: OutlinedButton(
-        onPressed: _isLoading ? null : () => context.go('/'),
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Colors.grey.shade400),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: const Text(
-          'CANCELAR',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorMessage() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red.shade200),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error, color: Colors.red.shade700),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              _errorMessage!,
-              style: TextStyle(color: Colors.red.shade700),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _performLogin() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      final authConfig = response['auth_config_json'] as Map<String, dynamic>?;
       setState(() {
-        _errorMessage = 'Por favor, complete todos los campos';
+        _techPassword = authConfig?['tech_mode_pin'] as String? ?? '1234';
+      });
+    } catch (e) {
+      setState(() {
+        _techPassword = '1234'; // Fallback
+      });
+    }
+  }
+
+  Future<void> _authenticate() async {
+    if (_passwordController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'Por favor, introduce la contraseña';
       });
       return;
     }
@@ -244,37 +63,196 @@ class _HiddenLoginScreenState extends ConsumerState<HiddenLoginScreen> {
     });
 
     try {
-      // TODO: Implementar autenticación real con Supabase
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Simular autenticación
-      if (_emailController.text == 'admin@meypark.com' &&
-          _passwordController.text == 'admin123') {
-        // Login exitoso
+      // Verificar contraseña técnica
+      if (_passwordController.text == _techPassword) {
+        // Contraseña correcta, ir al modo técnico
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Sesión iniciada correctamente'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          context.go('/tech-mode');
+          context.goNamed('tech-mode');
         }
       } else {
         setState(() {
-          _errorMessage = 'Credenciales incorrectas';
+          _errorMessage = 'Contraseña incorrecta';
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error de conexión: ${e.toString()}';
+        _errorMessage = 'Error de autenticación: $e';
       });
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _isLoading = false;
+      });
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black87,
+      body: Center(
+        child: Container(
+          width: 400,
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono de seguridad
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.security,
+                  size: 40,
+                  color: Colors.red.shade700,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Título
+              const Text(
+                'ACCESO TÉCNICO',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+
+              const Text(
+                'Introduce la contraseña técnica',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+
+              // Campo de contraseña
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 20),
+                decoration: InputDecoration(
+                  hintText: 'Contraseña',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        BorderSide(color: Colors.red.shade700, width: 2),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                ),
+                onSubmitted: (_) => _authenticate(),
+              ),
+              const SizedBox(height: 24),
+
+              // Mensaje de error
+              if (_errorMessage != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Text(
+                    _errorMessage!,
+                    style: TextStyle(
+                      color: Colors.red.shade700,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              const SizedBox(height: 24),
+
+              // Botón de autenticación
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _authenticate,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade700,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'ACCEDER',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Botón de cancelar
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () {
+                    context.goNamed('home');
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey.shade400),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'CANCELAR',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

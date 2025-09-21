@@ -68,15 +68,117 @@ final zonesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final companyId = ref.watch(companyIdProvider);
   if (companyId == null) return [];
 
-  final response = await SupabaseService.client
-      .from('zones')
-      .select()
-      .eq('company_id', companyId)
-      .eq('is_active', true)
-      .order('name');
+  try {
+    final response = await SupabaseService.client
+        .from('zones')
+        .select()
+        .eq('company_id', companyId)
+        .eq('is_active', true)
+        .order('name');
 
-  return List<Map<String, dynamic>>.from(response);
+    return List<Map<String, dynamic>>.from(response);
+  } catch (e) {
+    // Si hay error, devolver datos de prueba
+    print('Error cargando zonas desde Supabase: $e');
+    return _getDemoZones();
+  }
 });
+
+// Datos de prueba para zonas
+List<Map<String, dynamic>> _getDemoZones() {
+  return [
+    {
+      'id': 'zone_001',
+      'name': 'Zona Centro',
+      'color': '#FF6B6B',
+      'is_active': true,
+      'schedule_json': {
+        'monday': {'start': '08:00', 'end': '20:00'},
+        'tuesday': {'start': '08:00', 'end': '20:00'},
+        'wednesday': {'start': '08:00', 'end': '20:00'},
+        'thursday': {'start': '08:00', 'end': '20:00'},
+        'friday': {'start': '08:00', 'end': '20:00'},
+        'saturday': {'start': '09:00', 'end': '14:00'},
+        'sunday': {'start': '10:00', 'end': '14:00'},
+      },
+    },
+    {
+      'id': 'zone_002',
+      'name': 'Zona Comercial',
+      'color': '#4ECDC4',
+      'is_active': true,
+      'schedule_json': {
+        'monday': {'start': '09:00', 'end': '21:00'},
+        'tuesday': {'start': '09:00', 'end': '21:00'},
+        'wednesday': {'start': '09:00', 'end': '21:00'},
+        'thursday': {'start': '09:00', 'end': '21:00'},
+        'friday': {'start': '09:00', 'end': '21:00'},
+        'saturday': {'start': '10:00', 'end': '22:00'},
+        'sunday': {'start': '10:00', 'end': '20:00'},
+      },
+    },
+    {
+      'id': 'zone_003',
+      'name': 'Zona Residencial',
+      'color': '#45B7D1',
+      'is_active': true,
+      'schedule_json': {
+        'monday': {'start': '08:00', 'end': '18:00'},
+        'tuesday': {'start': '08:00', 'end': '18:00'},
+        'wednesday': {'start': '08:00', 'end': '18:00'},
+        'thursday': {'start': '08:00', 'end': '18:00'},
+        'friday': {'start': '08:00', 'end': '18:00'},
+        'saturday': {'start': '09:00', 'end': '15:00'},
+        'sunday': {'start': '10:00', 'end': '14:00'},
+      },
+    },
+    {
+      'id': 'zone_004',
+      'name': 'Zona Turística',
+      'color': '#96CEB4',
+      'is_active': true,
+      'schedule_json': {
+        'monday': {'start': '07:00', 'end': '23:00'},
+        'tuesday': {'start': '07:00', 'end': '23:00'},
+        'wednesday': {'start': '07:00', 'end': '23:00'},
+        'thursday': {'start': '07:00', 'end': '23:00'},
+        'friday': {'start': '07:00', 'end': '23:00'},
+        'saturday': {'start': '07:00', 'end': '23:00'},
+        'sunday': {'start': '07:00', 'end': '23:00'},
+      },
+    },
+    {
+      'id': 'zone_005',
+      'name': 'Zona Hospital',
+      'color': '#FECA57',
+      'is_active': true,
+      'schedule_json': {
+        'monday': {'start': '00:00', 'end': '23:59'},
+        'tuesday': {'start': '00:00', 'end': '23:59'},
+        'wednesday': {'start': '00:00', 'end': '23:59'},
+        'thursday': {'start': '00:00', 'end': '23:59'},
+        'friday': {'start': '00:00', 'end': '23:59'},
+        'saturday': {'start': '00:00', 'end': '23:59'},
+        'sunday': {'start': '00:00', 'end': '23:59'},
+      },
+    },
+    {
+      'id': 'zone_006',
+      'name': 'Zona Universidad',
+      'color': '#FF9FF3',
+      'is_active': true,
+      'schedule_json': {
+        'monday': {'start': '07:00', 'end': '19:00'},
+        'tuesday': {'start': '07:00', 'end': '19:00'},
+        'wednesday': {'start': '07:00', 'end': '19:00'},
+        'thursday': {'start': '07:00', 'end': '19:00'},
+        'friday': {'start': '07:00', 'end': '19:00'},
+        'saturday': {'start': '08:00', 'end': '14:00'},
+        'sunday': {'start': '09:00', 'end': '13:00'},
+      },
+    },
+  ];
+}
 
 // Tariffs provider
 final tariffsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {

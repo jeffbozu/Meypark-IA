@@ -10,6 +10,7 @@ import '../../features/fines/cancel_fine_screen.dart';
 import '../../features/accessibility/accessibility_screen.dart';
 import '../../features/tech_mode/tech_mode_screen.dart';
 import '../../features/auth_hidden/hidden_login_screen.dart';
+import '../../features/auth_hidden/login_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -69,6 +70,11 @@ class AppRouter {
         path: '/hidden-login',
         name: 'hidden-login',
         builder: (context, state) => const HiddenLoginScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        name: 'login',
+        builder: (context, state) => const LoginScreen(),
       ),
     ],
   );
