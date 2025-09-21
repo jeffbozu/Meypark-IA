@@ -1,0 +1,41 @@
+# Archivos del sistema
+.bash_history
+.bash_logout
+.bashrc
+.cache/
+.config/
+.cursor/
+.dart-tool/
+.dartServer/
+.flutter
+.gnupg/
+.local/
+.pki/
+.profile
+.pub-cache/
+.ssh/
+.sudo_as_admin_successful
+.vboxclient-*.pid
+
+# Archivos temporales
+*.tmp
+*.log
+*.pid
+
+# Directorios del sistema
+snap/
+Descargas/
+"Imágenes/"
+Música/
+Vídeos/
+Documentos/
+Escritorio/
+Plantillas/
+Público/
+
+# Archivos de instalación
+*.deb
+
+# Archivos de desarrollo específicos
+development/
+meypark-ia/
