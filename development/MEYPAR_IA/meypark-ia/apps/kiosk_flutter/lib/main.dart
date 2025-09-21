@@ -18,7 +18,7 @@ void main() async {
     await windowManager.setTitle('MEYPARK IA - Kiosko');
     await windowManager
         .setSize(const Size(800, 1280)); // 10" vertical optimizado
-    await windowManager.setResizable(false);
+    await windowManager.setResizable(true); // ← Cambiado a true para poder redimensionar
     await windowManager
         .setFullScreen(false); // ← Cambiado a false para ver botones
     await windowManager

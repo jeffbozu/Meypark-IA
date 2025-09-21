@@ -14,47 +14,89 @@ class ZonePickerScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: const DynamicAppBar(),
-      body: Column(
-        children: [
-          // Zona más usada (IA) - si está habilitada
-          if (_shouldShowMostUsedZone(aiRecommendations))
-            _buildMostUsedZoneCard(context, ref, aiRecommendations),
+      body: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Título
+            Text(
+              'Selecciona tu Zona de Estacionamiento',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
 
-          // Lista de zonas
-          Expanded(
-            child: zones.when(
-              data: (zonesList) =>
-                  _buildZonesList(context, zonesList, aiRecommendations),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error, size: 64, color: Colors.red.shade300),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error al cargar zonas',
-                      style:
-                          TextStyle(fontSize: 18, color: Colors.red.shade700),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      error.toString(),
-                      style:
-                          TextStyle(fontSize: 14, color: Colors.red.shade500),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => ref.refresh(zonesProvider),
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
+            // Zona más usada (IA) - si está habilitada
+            if (_shouldShowMostUsedZone(aiRecommendations))
+              _buildMostUsedZoneCard(context, ref, aiRecommendations),
+
+            // Lista de zonas
+            Expanded(
+              child: zones.when(
+                data: (zonesList) {
+                  if (zonesList.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.location_off, size: 64, color: Colors.orange.shade300),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No hay zonas disponibles',
+                            style: TextStyle(fontSize: 18, color: Colors.orange.shade700),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Contacta al administrador',
+                            style: TextStyle(fontSize: 14, color: Colors.orange.shade500),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return _buildZonesList(context, zonesList, aiRecommendations);
+                },
+                loading: () => const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Cargando zonas...', style: TextStyle(fontSize: 16)),
+                    ],
+                  ),
+                ),
+                error: (error, stack) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error, size: 64, color: Colors.red.shade300),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Error al cargar zonas',
+                        style: TextStyle(fontSize: 18, color: Colors.red.shade700),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        error.toString(),
+                        style: TextStyle(fontSize: 14, color: Colors.red.shade500),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => ref.refresh(zonesProvider),
+                        child: const Text('Reintentar'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
