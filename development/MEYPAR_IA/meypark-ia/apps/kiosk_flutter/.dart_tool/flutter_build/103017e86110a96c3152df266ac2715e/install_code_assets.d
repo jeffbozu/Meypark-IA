@@ -1,0 +1,1 @@
+ /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/.dart_tool/flutter_build/103017e86110a96c3152df266ac2715e/native_assets.json: 

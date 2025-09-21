@@ -1,0 +1,61 @@
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_$ZoneImpl _$$ZoneImplFromJson(Map<String, dynamic> json) => _$ZoneImpl(
+      id: json['id'] as String,
+      companyId: json['companyId'] as String,
+      code: json['code'] as String,
+      name: json['name'] as String,
+      color: json['color'] as String,
+      scheduleJson: json['scheduleJson'] as Map<String, dynamic>,
+      isActive: json['isActive'] as bool,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      isExternal: json['isExternal'] as bool? ?? false,
+      discounts: json['discounts'] as Map<String, dynamic>?,
+      residentDiscount: (json['residentDiscount'] as num?)?.toDouble(),
+    );
+
+Map<String, dynamic> _$$ZoneImplToJson(_$ZoneImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'companyId': instance.companyId,
+      'code': instance.code,
+      'name': instance.name,
+      'color': instance.color,
+      'scheduleJson': instance.scheduleJson,
+      'isActive': instance.isActive,
+      'createdAt': instance.createdAt.toIso8601String(),
+      'updatedAt': instance.updatedAt.toIso8601String(),
+      'isExternal': instance.isExternal,
+      'discounts': instance.discounts,
+      'residentDiscount': instance.residentDiscount,
+    };
+
+_$TariffImpl _$$TariffImplFromJson(Map<String, dynamic> json) => _$TariffImpl(
+      id: json['id'] as String,
+      zoneId: json['zoneId'] as String,
+      pricePerMinCents: (json['pricePerMinCents'] as num).toInt(),
+      minMinutes: (json['minMinutes'] as num).toInt(),
+      maxMinutes: (json['maxMinutes'] as num).toInt(),
+      stepMinutes: (json['stepMinutes'] as num?)?.toInt() ?? 5,
+      presets: (json['presets'] as List<dynamic>)
+          .map((e) => (e as num).toInt())
+          .toList(),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
+    );
+
+Map<String, dynamic> _$$TariffImplToJson(_$TariffImpl instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'zoneId': instance.zoneId,
+      'pricePerMinCents': instance.pricePerMinCents,
+      'minMinutes': instance.minMinutes,
+      'maxMinutes': instance.maxMinutes,
+      'stepMinutes': instance.stepMinutes,
+      'presets': instance.presets,
+      'createdAt': instance.createdAt.toIso8601String(),
+      'updatedAt': instance.updatedAt.toIso8601String(),
+    };
