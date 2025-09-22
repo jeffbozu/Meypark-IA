@@ -1,284 +1,259 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../../widgets/dynamic_app_bar.dart';
-import '../../core/utils/currency_formatter.dart';
 
 class PaymentResultScreen extends ConsumerWidget {
   const PaymentResultScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Datos de la transacción (normalmente vendrían del estado)
-    final transactionData = {
-      'id': 'TXN-${DateTime.now().millisecondsSinceEpoch}',
-      'plate': '1234ABC',
-      'zone': 'Zona Azul Centro',
-      'duration': 30,
-      'amount': 5.00,
-      'paymentMethod': 'QR Code',
-      'startTime': DateTime.now(),
-      'endTime': DateTime.now().add(const Duration(minutes: 30)),
-      'qrData':
-          'https://meypark.com/verify/TXN-${DateTime.now().millisecondsSinceEpoch}',
-    };
+    // Obtener datos del resultado del pago
+    final args = GoRouterState.of(context).extra as Map<String, dynamic>?;
+    final success = args?['success'] ?? true;
+    final transactionId = args?['transactionId'] ??
+        'TXN-${DateTime.now().millisecondsSinceEpoch}';
+    final amount = args?['amount'] ?? 5.00;
 
     return Scaffold(
       appBar: const DynamicAppBar(),
-      body: Column(
-        children: [
-          // Header de éxito
-          _buildSuccessHeader(),
+      body: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: success
+                ? [
+                    const Color(0xFF4CAF50),
+                    const Color(0xFF2E7D32),
+                  ]
+                : [
+                    const Color(0xFFE62144),
+                    const Color(0xFF8B1538),
+                  ],
+          ),
+        ),
+        child: Column(
+          children: [
+            // Icono de resultado
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+                border:
+                    Border.all(color: Colors.white.withOpacity(0.3), width: 3),
+              ),
+              child: Icon(
+                success ? Icons.check_circle : Icons.error,
+                size: 64,
+                color: Colors.white,
+              ),
+            ),
 
-          // Detalles de la transacción
-          _buildTransactionDetails(transactionData),
+            const SizedBox(height: 32),
 
-          // QR Code
-          _buildQRCode(transactionData['qrData'] as String),
+            // Título del resultado
+            Text(
+              success ? '¡Pago Exitoso!' : 'Error en el Pago',
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+              textAlign: TextAlign.center,
+            ),
 
-          const Spacer(),
+            const SizedBox(height: 16),
 
-          // Botones de acción
-          _buildActionButtons(context),
-        ],
-      ),
-    );
-  }
+            // Mensaje del resultado
+            Text(
+              success
+                  ? 'Tu estacionamiento ha sido pagado correctamente'
+                  : 'Hubo un problema procesando tu pago',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+              textAlign: TextAlign.center,
+            ),
 
-  Widget _buildSuccessHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green.shade400, Colors.green.shade600],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+            const SizedBox(height: 32),
+
+            // Detalles del pago
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  if (success) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'ID de Transacción:',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                        Text(
+                          transactionId,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Importe Pagado:',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                        Text(
+                          '${amount.toStringAsFixed(2)}€',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Fecha:',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                        Text(
+                          '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Hora:',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                        Text(
+                          '${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else ...[
+                    Text(
+                      'Por favor, intenta nuevamente o contacta al soporte técnico.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            const Spacer(),
+
+            // Botones de acción
+            Row(
+              children: [
+                // Botón volver al inicio
+                Expanded(
+                  child: SizedBox(
+                    height: 60,
+                    child: ElevatedButton(
+                      onPressed: () => context.goNamed('home'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: success
+                            ? const Color(0xFF4CAF50)
+                            : const Color(0xFFE62144),
+                        elevation: 8,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        'VOLVER AL INICIO',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 16),
+
+                // Botón nuevo pago (solo si fue exitoso)
+                if (success)
+                  Expanded(
+                    child: SizedBox(
+                      height: 60,
+                      child: OutlinedButton(
+                        onPressed: () => context.goNamed('pay-zone'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: BorderSide(color: Colors.white, width: 2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Text(
+                          'NUEVO PAGO',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+          ],
         ),
       ),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.check_circle,
-            size: 64,
-            color: Colors.white,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            '¡Pago Exitoso!',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Su estacionamiento ha sido activado',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white70,
-            ),
-          ),
-        ],
-      ),
     );
-  }
-
-  Widget _buildTransactionDetails(Map<String, dynamic> data) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Detalles de la Transacción',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildDetailRow('ID de Transacción', data['id']),
-          _buildDetailRow('Matrícula', data['plate']),
-          _buildDetailRow('Zona', data['zone']),
-          _buildDetailRow('Duración', '${data['duration']} minutos'),
-          _buildDetailRow('Método de Pago', data['paymentMethod']),
-          _buildDetailRow('Hora de Inicio', _formatTime(data['startTime'])),
-          _buildDetailRow('Hora de Fin', _formatTime(data['endTime'])),
-          const Divider(),
-          _buildDetailRow(
-            'Total Pagado',
-            CurrencyFormatter.format(data['amount']),
-            isTotal: true,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value, {bool isTotal = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: isTotal ? 16 : 14,
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: Colors.grey.shade700,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: isTotal ? 18 : 14,
-              fontWeight: FontWeight.bold,
-              color: isTotal ? Colors.green.shade700 : Colors.black,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQRCode(String qrData) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const Text(
-            'Código QR de Verificación',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          QrImageView(
-            data: qrData,
-            version: QrVersions.auto,
-            size: 200.0,
-            backgroundColor: Colors.white,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Escanee este código para verificar su estacionamiento',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButtons(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Botón imprimir
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: () => _printTicket(context),
-              icon: const Icon(Icons.print),
-              label: const Text('Imprimir Ticket'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Botón enviar por email
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: () => _sendEmail(context),
-              icon: const Icon(Icons.email),
-              label: const Text('Enviar por Email'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Botón volver al inicio
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: () => _goHome(context),
-              icon: const Icon(Icons.home),
-              label: const Text('Volver al Inicio'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatTime(DateTime dateTime) {
-    return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-  }
-
-  void _printTicket(BuildContext context) {
-    // TODO: Implementar impresión de ticket
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Imprimiendo ticket...'),
-        backgroundColor: Colors.blue,
-      ),
-    );
-  }
-
-  void _sendEmail(BuildContext context) {
-    // TODO: Implementar envío por email
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Enviando por email...'),
-        backgroundColor: Colors.orange,
-      ),
-    );
-  }
-
-  void _goHome(BuildContext context) {
-    context.go('/');
   }
 }

@@ -45,7 +45,7 @@ class HomeScreen extends ConsumerWidget {
               children: [
                 // Botón de idiomas
                 _buildLanguageButton(context),
-                
+
                 // Botón de accesibilidad
                 _buildAccessibilityButton(context),
               ],
@@ -77,17 +77,17 @@ class HomeScreen extends ConsumerWidget {
           Text(
             'Bienvenido a MEYPARK',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             'Sistema Inteligente de Parquímetros',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white.withOpacity(0.9),
-            ),
+                  color: Colors.white.withOpacity(0.9),
+                ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -100,7 +100,7 @@ class HomeScreen extends ConsumerWidget {
       width: double.infinity,
       height: 80,
       child: ElevatedButton(
-        onPressed: () => context.goNamed('zone-picker'),
+        onPressed: () => context.goNamed('pay-zone'),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: const Color(0xFFE62144),
