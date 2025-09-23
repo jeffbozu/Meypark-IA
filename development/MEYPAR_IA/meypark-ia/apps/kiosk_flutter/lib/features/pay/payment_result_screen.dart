@@ -223,13 +223,13 @@ class PaymentResultScreen extends ConsumerWidget {
 
                 const SizedBox(width: 16),
 
-                // Botón nuevo pago (solo si fue exitoso)
+                // Botón nuevo pago (solo si fue exitoso) - IR A HOME
                 if (success)
                   Expanded(
                     child: SizedBox(
                       height: 60,
                       child: OutlinedButton(
-                        onPressed: () => context.goNamed('pay-zone'),
+                        onPressed: () => context.goNamed('home'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
                           side: BorderSide(color: Colors.white, width: 2),

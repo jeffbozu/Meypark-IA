@@ -26,7 +26,7 @@ class _AccessibilityScreenState extends ConsumerState<AccessibilityScreen> {
 
     return Scaffold(
       appBar: const DynamicAppBar(),
-      body: Container(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

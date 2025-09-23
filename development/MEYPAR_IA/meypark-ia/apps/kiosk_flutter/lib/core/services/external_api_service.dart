@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/supabase_providers.dart';
 
 class ExternalAPIService {
   static final Dio _dio = Dio();

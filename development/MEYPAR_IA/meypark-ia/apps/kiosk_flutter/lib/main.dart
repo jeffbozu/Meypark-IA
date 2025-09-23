@@ -1,34 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:window_manager/window_manager.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/env.dart';
 import 'core/supabase/supabase_client.dart';
 import 'core/router/app_router.dart';
+import 'core/services/window_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Configurar window manager para Linux
+  // Inicializar gestor de ventanas para Linux
   if (Env.isLinux) {
-    await windowManager.ensureInitialized();
-    await windowManager.waitUntilReadyToShow();
-
-    // Configurar ventana para kiosko
-    await windowManager.setTitle('MEYPARK IA - Kiosko');
-    await windowManager
-        .setSize(const Size(800, 1280)); // 10" vertical optimizado
-    await windowManager
-        .setResizable(true); // ← Cambiado a true para poder redimensionar
-    await windowManager
-        .setFullScreen(false); // ← Cambiado a false para ver botones
-    await windowManager
-        .setSkipTaskbar(false); // ← Cambiado a false para ver en taskbar
-    await windowManager.setAlwaysOnTop(false); // ← Cambiado a false
-
-    // Mostrar ventana
-    await windowManager.show();
-    await windowManager.focus();
+    await WindowService.initialize();
   }
 
   // Inicializar Supabase

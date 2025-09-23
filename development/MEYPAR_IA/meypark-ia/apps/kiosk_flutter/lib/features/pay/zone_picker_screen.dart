@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/dynamic_app_bar.dart';
+import '../../core/providers/supabase_providers.dart';
 
 class ZonePickerScreen extends ConsumerWidget {
   const ZonePickerScreen({super.key});
@@ -35,9 +36,9 @@ class ZonePickerScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
 
-            // Lista de zonas
+            // Lista de zonas desde Supabase
             Expanded(
-              child: _buildZonesList(context),
+              child: _buildZonesListFromSupabase(context, ref),
             ),
           ],
         ),
@@ -45,53 +46,47 @@ class ZonePickerScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildZonesList(BuildContext context) {
-    // Datos de zonas demo
-    final zones = [
-      {
-        'id': 'zone_001',
-        'name': 'Zona Centro',
-        'color': '#FF6B6B',
-        'price': '2.50',
-        'description': 'Zona céntrica con alta demanda',
-      },
-      {
-        'id': 'zone_002',
-        'name': 'Zona Comercial',
-        'color': '#4ECDC4',
-        'price': '3.00',
-        'description': 'Área comercial y de oficinas',
-      },
-      {
-        'id': 'zone_003',
-        'name': 'Zona Residencial',
-        'color': '#45B7D1',
-        'price': '1.50',
-        'description': 'Zona residencial con descuentos',
-      },
-      {
-        'id': 'zone_004',
-        'name': 'Zona Turística',
-        'color': '#96CEB4',
-        'price': '4.00',
-        'description': 'Zona turística premium',
-      },
-      {
-        'id': 'zone_005',
-        'name': 'Zona Hospital',
-        'color': '#FECA57',
-        'price': '1.00',
-        'description': 'Zona especial con tarifas reducidas',
-      },
-      {
-        'id': 'zone_006',
-        'name': 'Zona Universidad',
-        'color': '#FF9FF3',
-        'price': '2.00',
-        'description': 'Zona universitaria con descuentos',
-      },
-    ];
+  Widget _buildZonesListFromSupabase(BuildContext context, WidgetRef ref) {
+    final zonesAsync = ref.watch(zonesProvider);
 
+    return zonesAsync.when(
+      data: (zones) => _buildZonesGrid(context, zones),
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      ),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error, color: Colors.white, size: 64),
+            const SizedBox(height: 16),
+            Text(
+              'Error cargando zonas',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Colors.white,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white70,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => ref.refresh(zonesProvider),
+              child: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildZonesGrid(
+      BuildContext context, List<Map<String, dynamic>> zones) {
     return ListView.builder(
       itemCount: zones.length,
       itemBuilder: (context, index) {
@@ -103,6 +98,9 @@ class ZonePickerScreen extends ConsumerWidget {
 
   Widget _buildZoneCard(BuildContext context, Map<String, dynamic> zone) {
     final color = Color(int.parse(zone['color'].replaceFirst('#', '0xFF')));
+    final name = zone['name'] ?? 'Zona sin nombre';
+    final schedule = zone['schedule_json'] ?? {};
+    final isActive = zone['is_active'] ?? true;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -112,14 +110,17 @@ class ZonePickerScreen extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
         ),
         child: InkWell(
-          onTap: () => _selectZone(context, zone['id']),
+          onTap: isActive ? () => _selectZone(context, zone['id']) : null,
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               gradient: LinearGradient(
-                colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
+                colors: [
+                  color.withOpacity(isActive ? 0.1 : 0.05),
+                  color.withOpacity(isActive ? 0.05 : 0.02)
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -131,11 +132,11 @@ class ZonePickerScreen extends ConsumerWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: color,
+                    color: isActive ? color : color.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    Icons.local_parking,
+                    isActive ? Icons.local_parking : Icons.block,
                     color: Colors.white,
                     size: 32,
                   ),
@@ -148,39 +149,37 @@ class ZonePickerScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        zone['name'],
+                        name,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: color,
+                              color: isActive ? color : Colors.grey,
                             ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        zone['description'],
+                        isActive ? 'Zona activa' : 'Zona inactiva',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey.shade600,
+                              color:
+                                  isActive ? Colors.grey.shade600 : Colors.red,
                             ),
                       ),
                     ],
                   ),
                 ),
 
-                // Precio
+                // Estado
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      '${zone['price']}€',
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: color,
-                              ),
+                    Icon(
+                      isActive ? Icons.check_circle : Icons.cancel,
+                      color: isActive ? Colors.green : Colors.red,
+                      size: 24,
                     ),
                     Text(
-                      'por hora',
+                      isActive ? 'Disponible' : 'No disponible',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade600,
+                            color: isActive ? Colors.green : Colors.red,
                           ),
                     ),
                   ],
@@ -188,8 +187,8 @@ class ZonePickerScreen extends ConsumerWidget {
 
                 const SizedBox(width: 12),
                 Icon(
-                  Icons.arrow_forward_ios,
-                  color: color,
+                  isActive ? Icons.arrow_forward_ios : Icons.block,
+                  color: isActive ? color : Colors.grey,
                   size: 20,
                 ),
               ],

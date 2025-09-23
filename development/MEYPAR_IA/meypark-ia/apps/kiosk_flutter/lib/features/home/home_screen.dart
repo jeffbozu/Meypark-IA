@@ -2,12 +2,101 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/dynamic_app_bar.dart';
+import '../../widgets/accessibility_controls.dart';
+import '../../widgets/adaptive_ai_button.dart';
+import '../../core/providers/supabase_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Inicializar el sistema
+    final systemInit = ref.watch(systemInitProvider);
+    final uiConfig = ref.watch(uiConfigProvider);
+    
+    return systemInit.when(
+      loading: () => _buildLoadingScreen(),
+      error: (error, stack) => _buildErrorScreen(error),
+      data: (initialized) => uiConfig.when(
+        loading: () => _buildLoadingScreen(),
+        error: (error, stack) => _buildMainScreen(context, ref, null),
+        data: (config) => _buildMainScreen(context, ref, config),
+      ),
+    );
+  }
+
+  Widget _buildLoadingScreen() {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFE62144), Color(0xFF8B1538)],
+          ),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 20),
+              Text(
+                'Iniciando sistema...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorScreen(Object error) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFE62144), Color(0xFF8B1538)],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error, color: Colors.white, size: 64),
+              const SizedBox(height: 20),
+              const Text(
+                'Error de sistema',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Trabajando en modo offline',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainScreen(BuildContext context, WidgetRef ref, Map<String, dynamic>? config) {
     return Scaffold(
       appBar: const DynamicAppBar(),
       body: Container(
@@ -17,17 +106,25 @@ class HomeScreen extends ConsumerWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFFE62144),
-              const Color(0xFF8B1538),
+              Color(int.parse((config?['primary_color'] ?? '#E62144').replaceFirst('#', '0xFF'))),
+              Color(int.parse((config?['secondary_color'] ?? '#8B1538').replaceFirst('#', '0xFF'))),
             ],
           ),
         ),
         child: Column(
           children: [
+            // Controles de accesibilidad e idiomas
+            const AccessibilityControls(),
+
+            const SizedBox(height: 20),
+
             // Mensaje de bienvenida
-            _buildWelcomeMessage(context),
+            _buildWelcomeMessage(context, config),
 
             const SizedBox(height: 40),
+
+            // Botón de IA adaptativa (recomendación inteligente)
+            const AdaptiveAIButton(),
 
             // Botón principal de pagar
             _buildPayButton(context),
@@ -58,7 +155,8 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildWelcomeMessage(BuildContext context) {
+  Widget _buildWelcomeMessage(BuildContext context, Map<String, dynamic>? config) {
+    final companyName = config?['company_name'] ?? 'MEYPARK';
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -75,7 +173,7 @@ class HomeScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Bienvenido a MEYPARK',
+            'Bienvenido a $companyName',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

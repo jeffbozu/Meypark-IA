@@ -13,11 +13,51 @@ final currentUserProvider = StreamProvider<User?>((ref) {
       .map((data) => data.session?.user);
 });
 
-// Device ID provider
+// Device ID provider - se carga desde configuración del sistema
 final deviceIdProvider = StateProvider<String?>((ref) => null);
 
-// Company ID provider
+// Company ID provider - se carga desde configuración del dispositivo
 final companyIdProvider = StateProvider<String?>((ref) => null);
+
+// System initialization provider
+final systemInitProvider = FutureProvider<bool>((ref) async {
+  try {
+    // Intentar cargar configuración del dispositivo desde storage local
+    final deviceId = await _loadDeviceIdFromStorage();
+    if (deviceId != null) {
+      ref.read(deviceIdProvider.notifier).state = deviceId;
+      
+      // Cargar companyId desde dispositivo en Supabase
+      final response = await SupabaseService.client
+          .from('devices')
+          .select('company_id')
+          .eq('id', deviceId)
+          .single();
+      
+      if (response['company_id'] != null) {
+        ref.read(companyIdProvider.notifier).state = response['company_id'];
+        return true;
+      }
+    }
+    
+    // Si no hay configuración, usar valores demo
+    ref.read(deviceIdProvider.notifier).state = 'device_001';
+    ref.read(companyIdProvider.notifier).state = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+    return true;
+  } catch (e) {
+    // En caso de error, usar configuración demo
+    ref.read(deviceIdProvider.notifier).state = 'device_001';
+    ref.read(companyIdProvider.notifier).state = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+    return true;
+  }
+});
+
+// Helper function para cargar device ID desde storage
+Future<String?> _loadDeviceIdFromStorage() async {
+  // TODO: Implementar storage local (SharedPreferences o similar)
+  // Por ahora devolver null para usar demo
+  return null;
+}
 
 // Current device config provider
 final deviceConfigProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
@@ -66,20 +106,23 @@ final themesProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
 // Zones provider
 final zonesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final companyId = ref.watch(companyIdProvider);
-  if (companyId == null) return [];
-
+  if (companyId == null) {
+    // Si no hay companyId, intentar cargar desde configuración demo
+    ref.read(companyIdProvider.notifier).state = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+    return _getDemoZones();
+  }
+  
   try {
     final response = await SupabaseService.client
         .from('zones')
-        .select()
+        .select('*, tariffs(*)')
         .eq('company_id', companyId)
-        .eq('is_active', true)
-        .order('name');
-
-    return List<Map<String, dynamic>>.from(response);
+        .eq('is_active', true);
+    
+    final zones = List<Map<String, dynamic>>.from(response);
+    return zones.isNotEmpty ? zones : _getDemoZones();
   } catch (e) {
-    // Si hay error, devolver datos de prueba
-    print('Error cargando zonas desde Supabase: $e');
+    // Si falla la conexión, usar datos demo como fallback
     return _getDemoZones();
   }
 });
@@ -194,6 +237,105 @@ final tariffsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
 
   return List<Map<String, dynamic>>.from(response);
 });
+
+// Accessibility settings provider
+final accessibilityProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final companyId = ref.watch(companyIdProvider);
+  if (companyId == null) return _getDefaultAccessibilitySettings();
+  
+  try {
+    final response = await SupabaseService.client
+        .from('accessibility_configs')
+        .select()
+        .eq('company_id', companyId)
+        .eq('is_active', true)
+        .single();
+    
+    return response;
+  } catch (e) {
+    return _getDefaultAccessibilitySettings();
+  }
+});
+
+// Language settings provider
+final languageProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final companyId = ref.watch(companyIdProvider);
+  if (companyId == null) return _getDefaultLanguageSettings();
+  
+  try {
+    final response = await SupabaseService.client
+        .from('language_configs')
+        .select()
+        .eq('company_id', companyId)
+        .eq('is_active', true);
+    
+    final languages = List<Map<String, dynamic>>.from(response);
+    return {
+      'available': languages,
+      'default': languages.firstWhere((l) => l['is_default'] == true, 
+          orElse: () => languages.isNotEmpty ? languages.first : _getDefaultLanguageSettings()['default'])
+    };
+  } catch (e) {
+    return _getDefaultLanguageSettings();
+  }
+});
+
+// UI Configuration provider
+final uiConfigProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final companyId = ref.watch(companyIdProvider);
+  if (companyId == null) return _getDefaultUIConfig();
+  
+  try {
+    final response = await SupabaseService.client
+        .from('ui_configs')
+        .select()
+        .eq('company_id', companyId)
+        .eq('is_active', true)
+        .single();
+    
+    return response;
+  } catch (e) {
+    return _getDefaultUIConfig();
+  }
+});
+
+// Helper functions for default configurations
+Map<String, dynamic> _getDefaultAccessibilitySettings() {
+  return {
+    'high_contrast': false,
+    'large_text': false,
+    'voice_guidance': false,
+    'simplified_mode': false,
+    'dark_mode': false,
+    'adaptive_ai': true,
+  };
+}
+
+Map<String, dynamic> _getDefaultLanguageSettings() {
+  return {
+    'available': [
+      {'code': 'es', 'name': 'Español', 'is_default': true},
+      {'code': 'en', 'name': 'English', 'is_default': false},
+      {'code': 'ca', 'name': 'Català', 'is_default': false},
+    ],
+    'default': {'code': 'es', 'name': 'Español', 'is_default': true}
+  };
+}
+
+Map<String, dynamic> _getDefaultUIConfig() {
+  return {
+    'primary_color': '#E62144',
+    'secondary_color': '#8B1538',
+    'accent_color': '#FF6B6B',
+    'font_size_base': 16.0,
+    'font_size_large': 20.0,
+    'button_height': 56.0,
+    'company_name': 'MEYPARK',
+    'logo_url': null,
+    'show_clock': true,
+    'time_format_24h': true,
+  };
+}
 
 // AI Settings provider
 final aiSettingsProvider = FutureProvider<Map<String, dynamic>?>((ref) async {

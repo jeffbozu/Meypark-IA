@@ -6,10 +6,8 @@
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/lib/libscreen_retriever_plugin.so
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/lib/liburl_launcher_linux_plugin.so
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/lib/libwindow_manager_plugin.so
-/home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/lib/native_assets.json
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/data/flutter_assets/FontManifest.json
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/data/flutter_assets/version.json
-/home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/data/flutter_assets/NOTICES
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/data/flutter_assets/fonts/MaterialIcons-Regular.otf
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/data/flutter_assets/AssetManifest.bin
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/data/flutter_assets/NativeAssetsManifest.json
@@ -19,6 +17,5 @@
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/data/flutter_assets/packages/window_manager/images/ic_chrome_unmaximize.png
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/data/flutter_assets/packages/window_manager/images/ic_chrome_minimize.png
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/data/flutter_assets/packages/window_manager/images/ic_chrome_maximize.png
-/home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/data/flutter_assets/AssetManifest.bin.json
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/data/flutter_assets/AssetManifest.json
 /home/jeffrey/development/MEYPAR_IA/meypark-ia/apps/kiosk_flutter/build/linux/x64/release/bundle/lib/libapp.so
