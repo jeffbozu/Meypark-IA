@@ -4,11 +4,12 @@
 
 ### 1. **Acceder al Dashboard**
 - Ve a: https://supabase.com/dashboard
-- Selecciona tu proyecto: `meypark-ia`
+- Selecciona tu proyecto: `meypark-ia` (o el nombre de tu proyecto)
 
 ### 2. **Navegar a la Tabla**
-- Ve a **Table Editor** en el menú lateral
+- Ve a **Table Editor** en el menú lateral izquierdo
 - Busca la tabla: `parking_zones`
+- **IMPORTANTE**: Si no ves la tabla, ejecuta primero las migraciones
 
 ### 3. **Deshabilitar Zonas**
 - Haz clic en la fila de la zona que quieres deshabilitar
@@ -68,6 +69,58 @@ WHERE is_active = false;
 - Ve a la sección de **Gestión de Zonas**
 - Selecciona las zonas que quieres deshabilitar
 - Cambia el estado a **Inactivo**
+
+## 🚀 **PASO PREVIO: Ejecutar Migraciones**
+
+### **Si no ves las tablas, ejecuta primero:**
+
+1. **Desde el Dashboard de Supabase:**
+   - Ve a **SQL Editor**
+   - Copia y pega el contenido de: `supabase/migrations/20250122000004_business_data_tables.sql`
+   - Ejecuta la consulta
+   - Luego ejecuta: `supabase/migrations/20250122000005_seed_business_data.sql`
+
+2. **Desde la línea de comandos:**
+   ```bash
+   cd /home/jeffrey/development/MEYPAR_IA/meypark-ia
+   supabase db push
+   ```
+
+### **Verificar que las tablas existen:**
+```sql
+-- Ver todas las tablas
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+AND table_name LIKE '%parking%';
+
+-- Ver estructura de la tabla parking_zones
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns 
+WHERE table_name = 'parking_zones' 
+AND table_schema = 'public';
+```
+
+### **Esquema de la tabla `parking_zones`:**
+```sql
+CREATE TABLE parking_zones (
+    id UUID PRIMARY KEY,
+    company_id UUID NOT NULL,
+    zone_code VARCHAR(50) NOT NULL,    -- 'zone_001', 'zone_002', etc.
+    name VARCHAR(100) NOT NULL,        -- 'Zona Centro', 'Zona Comercial', etc.
+    description TEXT,
+    color VARCHAR(7) DEFAULT '#FF6B6B', -- Color hex
+    icon VARCHAR(50),                  -- Nombre del icono
+    schedule_json JSONB,               -- Horarios en JSON
+    price_per_hour_cents INTEGER,      -- Precio por hora en centavos
+    price_per_minute_cents INTEGER,    -- Precio por minuto en centavos
+    max_duration_hours INTEGER,        -- Duración máxima en horas
+    min_duration_minutes INTEGER,      -- Duración mínima en minutos
+    is_active BOOLEAN DEFAULT true,    -- ⭐ ESTE ES EL CAMPO CLAVE
+    created_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ
+);
+```
 
 ## 📊 **Zonas Actuales en el Sistema**
 
