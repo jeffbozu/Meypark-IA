@@ -40,7 +40,8 @@ class _DynamicAppBarState extends ConsumerState<DynamicAppBar> {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
-          _currentTime = DateTime.now();
+          // Obtener hora de Madrid, España
+          _currentTime = DateTime.now().toUtc().add(const Duration(hours: 1));
         });
       }
     });
@@ -51,9 +52,9 @@ class _DynamicAppBarState extends ConsumerState<DynamicAppBar> {
     final uiConfig = ref.watch(uiConfigProvider);
 
     return uiConfig.when(
-      loading: () => _buildDefaultAppBar(context),
-      error: (error, stack) => _buildDefaultAppBar(context),
-      data: (config) => _buildConfiguredAppBar(context, config),
+      loading: () => _buildSimpleAppBar(context),
+      error: (error, stack) => _buildSimpleAppBar(context),
+      data: (config) => _buildSimpleAppBar(context),
     );
   }
 
@@ -343,6 +344,132 @@ class _DynamicAppBarState extends ConsumerState<DynamicAppBar> {
         Icons.local_parking,
         color: Colors.white,
         size: 24,
+      ),
+    );
+  }
+
+  AppBar _buildSimpleAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: const Color(0xFFE62144),
+      elevation: 0,
+      automaticallyImplyLeading: false, // Sin hamburguesa
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Fecha y hora de Madrid
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                DateFormat('dd/MM/yyyy').format(_currentTime),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                DateFormat('HH:mm:ss').format(_currentTime),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          
+          // Botones de acción
+          Row(
+            children: [
+              // Botón Idiomas
+              _buildActionButton(
+                icon: Icons.language,
+                label: 'Idiomas',
+                onTap: () => _showLanguageDialog(context),
+              ),
+              const SizedBox(width: 8),
+              
+              // Botón Accesibilidad
+              _buildActionButton(
+                icon: Icons.accessibility,
+                label: 'Accesibilidad',
+                onTap: () => context.go('/accessibility'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: 18),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Seleccionar Idioma'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Text('🇪🇸'),
+              title: const Text('Español'),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: Implementar cambio de idioma
+              },
+            ),
+            ListTile(
+              leading: const Text('🇬🇧'),
+              title: const Text('English'),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: Implementar cambio de idioma
+              },
+            ),
+            ListTile(
+              leading: const Text('🇫🇷'),
+              title: const Text('Français'),
+              onTap: () {
+                Navigator.pop(context);
+                // TODO: Implementar cambio de idioma
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
