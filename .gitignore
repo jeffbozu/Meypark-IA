@@ -1,0 +1,7 @@
+development/
+*.log
+*.tmp
+build/
+.dart_tool/
+coverage/
+test/coverage/
